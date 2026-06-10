@@ -1,5 +1,3 @@
-streamlit==1.45.1
-torch
+streamlit
 transformers
-accelerate
-sentencepiece
+torch
