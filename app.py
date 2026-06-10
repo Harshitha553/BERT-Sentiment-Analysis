@@ -1,64 +1,38 @@
 import streamlit as st
+from transformers import pipeline
 
-# MUST BE FIRST STREAMLIT COMMAND
 st.set_page_config(
     page_title="BERT Sentiment Analysis",
-    page_icon="🤖",
-    layout="centered"
+    page_icon="🤖"
 )
-
-import torch
-from transformers import BertTokenizer, BertForSequenceClassification
 
 @st.cache_resource
 def load_model():
+    return pipeline("sentiment-analysis")
 
-    model = BertForSequenceClassification.from_pretrained(
-        "bert_sentiment_model"
-    )
-
-    tokenizer = BertTokenizer.from_pretrained(
-        "bert_sentiment_model"
-    )
-
-    return model, tokenizer
-
-model, tokenizer = load_model()
-
-def predict_sentiment(text):
-
-    inputs = tokenizer(
-        text,
-        return_tensors="pt",
-        truncation=True,
-        padding=True,
-        max_length=128
-    )
-
-    with torch.no_grad():
-
-        outputs = model(**inputs)
-
-        prediction = torch.argmax(
-            outputs.logits,
-            dim=1
-        ).item()
-
-    return prediction
+classifier = load_model()
 
 st.title("🤖 BERT Sentiment Analysis")
 
-user_input = st.text_area(
-    "Enter Review"
+text = st.text_area(
+    "Enter Review",
+    height=150
 )
 
-if st.button("Analyze Sentiment"):
+if st.button("Analyze"):
 
-    prediction = predict_sentiment(
-        user_input
-    )
+    if text.strip():
 
-    if prediction == 1:
-        st.success("😊 Positive Sentiment")
-    else:
-        st.error("😞 Negative Sentiment")
+        result = classifier(text)
+
+        label = result[0]["label"]
+        score = result[0]["score"]
+
+        if label == "POSITIVE":
+            st.success(
+                f"😊 Positive\nConfidence: {score:.2%}"
+            )
+        else:
+            st.error(
+                f"😞 Negative\nConfidence: {score:.2%}"
+            )
